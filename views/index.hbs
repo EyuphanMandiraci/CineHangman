@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>CineHangman: Guess the Movie Scene</title>
+    <link rel="preload" href="/public/images/hangman/stage1.png" as="image">
+    <link rel="preload" href="/public/images/hangman/stage2.png" as="image">
+    <link rel="preload" href="/public/images/hangman/stage3.png" as="image">
+    <link rel="preload" href="/public/images/hangman/stage4.png" as="image">
+    <link rel="preload" href="/public/images/hangman/stage5.png" as="image">
+    <link rel="preload" href="/public/images/hangman/stage6.png" as="image">
+    <link rel="preload" href="/public/images/hangman/stage7.png" as="image">
+</head>
+<body>
+<div class="container">
+    <h1>CineHangman</h1>
+    <header>
+        <h2>Guess the Movie Scene</h2>
+        <p>Guess the movie scene by typing in letters. If you guess wrong, the hangman will be drawn. If you guess right, the letter will be revealed. If you guess all the letters, you win!</p>
+    </header>
+    <div class="scene">
+        <img src="{{image}}" alt="Movie Scene"><br>
+        <button onclick="refreshImage()" id="refresh">Refresh Image</button>
+    </div>
+    <div class="keyboard">
+        <button>A</button>
+        <button>B</button>
+        <button>C</button>
+        <button>D</button>
+        <button>E</button>
+        <button>F</button>
+        <button>G</button>
+        <button>H</button>
+        <button>I</button>
+        <button>J</button>
+        <button>K</button>
+        <button>L</button>
+        <button>M</button>
+        <button>N</button>
+        <button>O</button>
+        <button>P</button>
+        <button>Q</button>
+        <button>R</button>
+        <button>S</button>
+        <button>T</button>
+        <button>U</button>
+        <button>V</button>
+        <button>W</button>
+        <button>X</button>
+        <button>Y</button>
+        <button>Z</button>
+    </div>
+    <div class="word">
+    </div>
+    <div class="hangman">
+        <img src="/public/images/hangman/stage1.png" alt="hangman"/>
+    </div>
+</div>
+<script>
+    const movieName = "{{name}}"
+    let wrongGuesses = 0;
+</script>
+<script>
+    document.querySelectorAll('button').forEach(button => {
+        if (button.id !== "refresh"){
+            button.addEventListener('click', () => {
+                keyPress({key: button.innerText.toLowerCase()})
+                button.disabled = true;
+            });
+        }
+    });
+
+    Array.from(movieName).forEach((letter) => {
+        if (letter === ' ') {
+            const span = document.createElement('span');
+            span.innerHTML = '&nbsp;&nbsp;';
+            span.classList.add('space');
+            document.querySelector('.word').appendChild(span);
+        } else {
+            const span = document.createElement('span');
+            span.innerHTML = '_&nbsp;';
+            span.classList.add('unknown');
+            document.querySelector('.word').appendChild(span)
+        }
+    })
+
+    function wrong(){
+        wrongGuesses++;
+        document.querySelector('.hangman img').src = `/public/images/hangman/stage${wrongGuesses+1}.png`;
+        if(wrongGuesses === 6) {
+            document.querySelector('.keyboard').innerHTML = '<h1>Game Over</h1>';
+            document.querySelector('.word').innerHTML = `<h2>The movie was ${movieName}</h2>`;
+        }
+    }
+
+    function keyPress(e) {
+        if (movieName.toLowerCase().includes(e.key)){
+            document.querySelectorAll('.word span').forEach((span, index) => {
+                if (String(movieName[index]).toLowerCase() === e.key) {
+                    span.innerText = movieName[index];
+                    span.classList.remove('unknown');
+                    span.classList.add('known');
+                }
+            });
+        }
+        else {
+            wrong();
+        }
+    }
+
+    setInterval(() => {
+        if (document.querySelectorAll('.unknown').length === 0) {
+            document.querySelector('.keyboard').innerHTML = '<h1>You Win!</h1>';
+        }
+    }, 1)
+
+    function refreshImage(){
+        document.getElementById("refresh").disabled = true;
+        document.querySelector('.scene img').src = "/public/images/loading.gif";
+        fetch("/api/newImage?name=" + movieName).then((response) => {
+            return response.json();
+        }).then((data) => {
+            document.querySelector('.scene img').src = data.image;
+            document.getElementById("refresh").disabled = false;
+        })
+    }
+</script>
+</body>
+</html>
+<style>
+    body {
+        background-color: #222222;
+        color: #ffffff;
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    h1 {
+        text-align: center;
+        font-size: 48px;
+        margin-bottom: 40px;
+    }
+
+    .scene {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .scene img {
+        max-width: 600px;
+    }
+
+    .keyboard {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .keyboard button {
+        background-color: #444444;
+        color: #ffffff;
+        border: none;
+        border-radius: 5px;
+        font-size: 24px;
+        padding: 10px 20px;
+        margin: 5px;
+        cursor: pointer;
+    }
+
+    .keyboard button:disabled {
+        background-color: #666666;
+        color: #999999;
+        cursor: not-allowed;
+    }
+
+    .word {
+        font-size: 36px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .hangman {
+        text-align: center;
+    }
+
+    .hangman img {
+        max-width: 400px;
+    }
+
+    #refresh{
+        background-color: #444444;
+        color: #ffffff;
+        border: none;
+        border-radius: 5px;
+        font-size: 24px;
+        padding: 10px 20px;
+        margin: 5px;
+        cursor: pointer;
+    }
+    header{
+        text-align: center;
+    }
+</style>
